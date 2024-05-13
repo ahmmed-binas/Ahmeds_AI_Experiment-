@@ -40,7 +40,7 @@ class DrawingClassifier:
 
         self.proj_name = simpledialog.askstring("Project Name", "Please enter your project name below", parent=msg)
         if os.path.exists(self.proj_name):
-            with open(f"{self.proj_name}/{self.proj_name}_cata.pickle", "rb") as f:
+            with open(f"{self.proj_name}/{self.proj_name}_data.pickle", "rb") as f:
                 data = pickle.load(f)
             self.class1 = data['c1']
             self.class2 = data['c2']
