@@ -22,7 +22,7 @@ pip install pillow opencv-python numpy scikit-learn tk
 Finally Run your code !!!!
 
 ```
-python drawing_classifier.py
+python start.py
 
 ```
 
