@@ -4,8 +4,25 @@ setting up the application:
 first make sure the getpip.py file is in your folder that you are working with to download and setup pip.
 then go to your directory and download pip if you dont have ...
 ```
-python
 python -m venv venv
+
+```
+Then Activate The Virtual Environment
+```
+.\venv\Scripts\activate
+
+```
+After That Download all the needed libraries' 
+
+```
+pip install pillow opencv-python numpy scikit-learn tk
+
 ```
 
+Finally Run your code !!!!
+
+```
+python drawing_classifier.py
+
+```
 
