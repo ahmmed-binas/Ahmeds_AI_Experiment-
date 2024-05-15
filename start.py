@@ -4,7 +4,7 @@ import tkinter.messagebox
 from tkinter import *
 from tkinter import simpledialog
 import PIL
-import PIL.Image
+from PIL import Image
 import PIL.ImageDraw
 import cv2 as cv
 import numpy as np
@@ -67,7 +67,7 @@ class DrawingClassifier:
             os.mkdir(self.class2)
             os.mkdir(self.class3)
             os.chdir("..")
-   
+    
     def init_gui(self):
         WIDTH = 500
         HEIGHT = 500
@@ -106,6 +106,8 @@ class DrawingClassifier:
         bp_btn = Button(btn_frame, text="Brush+", command=self.brushplus)
         bp_btn.grid(row=1, column=2, sticky=W+E)
 
+        self.train_model()  # Train the model when GUI is initialized
+
         train_btn = Button(btn_frame, text="Train Model", command=self.train_model)
         train_btn.grid(row=2, column=0, sticky=W+E)
 
@@ -132,6 +134,7 @@ class DrawingClassifier:
         self.root.attributes("-topmost", True)
         self.root.mainloop()
 
+
     def paint(self, event):
         x1, y1 = (event.x-1), (event.y-1)
         x2, y2 = (event.x+1), (event.y+1)
@@ -142,7 +145,8 @@ class DrawingClassifier:
     def save(self, class_num):
         self.image1.save("temp.png")
         img = PIL.Image.open("temp.png")
-        img.thumbnail((50, 50), PIL.Image.ANTIALIAS)
+        img.thumbnail((50, 50), PIL.Image.LANCZOS)
+
 
         if class_num == 1:
             img.save(f"{self.proj_name}/{self.class1}/{self.class1_counter}.png", "PNG")
@@ -167,34 +171,57 @@ class DrawingClassifier:
 
     def clear(self):
         self.canvas.delete("all")
-        self.draw.rectangle([0, 0, 1000], fill="white")
+        self.draw.rectangle([(0, 0), (1000, 1000)], fill="white")
+
 
     def train_model(self):
-        img_list = np.array([])
-        class_list = np.array([])
+        img_list = []
+        class_list = []
 
         for x in range(1, self.class1_counter):
-            img = cv.imread(f"{self.proj_name}/{self.class1}/{x}.png")[:, :, 0]
-            img = img.reshape(2500)
-            img_list = np.append(img_list, [img])
-            class_list = np.append(class_list, 1)
+            img_path = f"{self.proj_name}/{self.class1}/{x}.png"
+            img = cv.imread(img_path)
+            if img is not None:
+                img = img[:, :, 0].reshape(-1)
+                img_list.append(img)
+                class_list.append(1)
+            else:
+                print(f"Failed to load image: {img_path}")
+
 
         for x in range(1, self.class2_counter):
-            img = cv.imread(f"{self.proj_name}/{self.class2}/{x}.png")[:, :, 0]
-            img = img.reshape(2500)
-            img_list = np.append(img_list, [img])
-            class_list = np.append(class_list, 2)
+            img_path = f"{self.proj_name}/{self.class2}/{x}.png"
+            img = cv.imread(img_path)
+            if img is not None:
+                img = img[:, :, 0].reshape(-1)
+                img_list.append(img)
+                class_list.append(2)
+            else:
+                print(f"Failed to load image: {img_path}")
+
 
         for x in range(1, self.class3_counter):
-            img = cv.imread(f"{self.proj_name}/{self.class3}/{x}.png")[:, :, 0]
-            img = img.reshape(2500)
-            img_list = np.append(img_list, [img])
-            class_list = np.append(class_list, 3)
-            
-        img_list = img_list.reshape(self.class1_counter - 1 + self.class2_counter - 1 + self.class3_counter - 1, 2500)
+            img_path = f"{self.proj_name}/{self.class3}/{x}.png"
+            img = cv.imread(img_path)
+            if img is not None:
+                img = img[:, :, 0].reshape(-1)
+                img_list.append(img)
+                class_list.append(3)
+            else:
+                print(f"Failed to load image: {img_path}")
+
+        if not img_list:
+            print("No images loaded. Check file paths or image loading process.")
+            return
+
+        img_list = np.array(img_list)
+        class_list = np.array(class_list)
+
+        img_list = img_list.reshape(img_list.shape[0], -1)
         
         self.clf.fit(img_list, class_list)
         tkinter.messagebox.showinfo("Ahmed's experiment is done", "Model successfully trained", parent=self.root)
+
 
 
 
@@ -208,7 +235,7 @@ class DrawingClassifier:
     def predict(self):
         self.image1.save('temp.png')
         img = PIL.Image.open('temp.png')
-        img.thumbnail((50, 50), PIL.Image.ANTIALIAS)
+        img.thumbnail((50, 50), PIL.Image.LANCZOS)
         img.save("predictshape.png", "PNG")
         
         img = cv.imread("predictshape.png")[:, :, 0]
@@ -273,6 +300,9 @@ class DrawingClassifier:
         if answer is True:
             self.save_all()
             self.root.destroy()
+        elif answer is False:
+            self.root.destroy()
+            
                 
 
 DrawingClassifier()
