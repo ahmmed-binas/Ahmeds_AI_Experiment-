@@ -1,25 +1,25 @@
 import pickle
 import os.path
-
 import tkinter.messagebox
 from tkinter import *
-
 from tkinter import simpledialog
-
 import PIL
 import PIL.Image
 import PIL.ImageDraw
 import cv2 as cv
 import numpy as np
-
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+import tkinter.filedialog
+
 
 class DrawingClassifier:
-
+    
     def __init__(self):
         self.class1, self.class2, self.class3 = None, None, None
         self.class1_counter, self.class2_counter, self.class3_counter = None, None, None
@@ -170,49 +170,109 @@ class DrawingClassifier:
         self.draw.rectangle([0, 0, 1000], fill="white")
 
     def train_model(self):
-        img_list=np.array([])
-        class_list=np.array([])
-        
-        
-    for x in range(1, self.class1_counter):
-        img = cv.imread(f"{self.proj_name}/{self.class1}/{x}.png")[:, :, 0]
-        img = img.reshape(2500)
-        img_list = np.append(img_list, [img])
-        class_list = np.append(class_list, 1)
+        img_list = np.array([])
+        class_list = np.array([])
 
-    for x in range(1, self.class2_counter):
-        img = cv.imread(f"{self.proj_name}/{self.class2}/{x}.png")[:, :, 0]
-        img = img.reshape(2500)
-        img_list = np.append(img_list, [img])
-        class_list = np.append(class_list, 2)
+        for x in range(1, self.class1_counter):
+            img = cv.imread(f"{self.proj_name}/{self.class1}/{x}.png")[:, :, 0]
+            img = img.reshape(2500)
+            img_list = np.append(img_list, [img])
+            class_list = np.append(class_list, 1)
 
-    for x in range(1, self.class3_counter):
-        img = cv.imread(f"{self.proj_name}/{self.class3}/{x}.png")[:, :, 0]
-        img = img.reshape(2500)
-        img_list = np.append(img_list, [img])
-        class_list = np.append(class_list, 3)
+        for x in range(1, self.class2_counter):
+            img = cv.imread(f"{self.proj_name}/{self.class2}/{x}.png")[:, :, 0]
+            img = img.reshape(2500)
+            img_list = np.append(img_list, [img])
+            class_list = np.append(class_list, 2)
+
+        for x in range(1, self.class3_counter):
+            img = cv.imread(f"{self.proj_name}/{self.class3}/{x}.png")[:, :, 0]
+            img = img.reshape(2500)
+            img_list = np.append(img_list, [img])
+            class_list = np.append(class_list, 3)
             
-    
-    img_list=img_list.reshape(self.class1_counter - 1 +self.class2_counter - 1 +self.class3_counter -1,2500)
-    
-    self.clf.fil(img_list,class_list)
-    tkinter.messagebox.showinfo("Ahmed's experiment is done","Model successfully trained",parent=self.root)
-    
+        img_list = img_list.reshape(self.class1_counter - 1 + self.class2_counter - 1 + self.class3_counter - 1, 2500)
+        
+        self.clf.fit(img_list, class_list)
+        tkinter.messagebox.showinfo("Ahmed's experiment is done", "Model successfully trained", parent=self.root)
+
+
+
     def save_model(self):
-        pass
-    
+        file_path = tkinter.filedialog.asksaveasfilename(defaultextension='.pickle')
+        with open(file_path, "wb") as f:
+            pickle.dump(self.clf, f)
+        tkinter.messagebox.showinfo("Ahmmed's drawing classifier", "Model Saved Successfully", parent=self.root)
+
+        
     def predict(self):
-        pass
-
+        self.image1.save('temp.png')
+        img = PIL.Image.open('temp.png')
+        img.thumbnail((50, 50), PIL.Image.ANTIALIAS)
+        img.save("predictshape.png", "PNG")
+        
+        img = cv.imread("predictshape.png")[:, :, 0]
+        img = img.reshape(2500)
+        prediction = self.clf.predict([img])
+        if prediction[0] == 1:
+            tkinter.messagebox.showinfo("Ahmmed's Drawing Classifier", f"The drawing is likely to be {self.class1}", parent=self.root)
+        elif prediction[0] == 2:
+            tkinter.messagebox.showinfo("Ahmmed's Drawing Classifier", f"The drawing is likely to be {self.class2}", parent=self.root)
+        elif prediction[0] == 3:
+            tkinter.messagebox.showinfo("Ahmmed's Drawing Classifier", f"The drawing is likely to be {self.class3}", parent=self.root)
+            
+                    
     def rotate_model(self):
-        pass
-
+            if isinstance(self.clf, LinearSVC):
+                self.clf = KNeighborsClassifier()
+            elif isinstance(self.clf, KNeighborsClassifier):
+                self.clf = LogisticRegression()
+            elif isinstance(self.clf, LogisticRegression):
+                self.clf = DecisionTreeClassifier()
+            elif isinstance(self.clf, DecisionTreeClassifier):
+                self.clf = RandomForestClassifier()
+            elif isinstance(self.clf, RandomForestClassifier):
+                self.clf = GaussianNB()
+            elif isinstance(self.clf, GaussianNB):
+                self.clf = LinearSVC()
+        
     def save_all(self):
-        pass
-    def load_model(self):
-        pass
-    def on_closing(self):
-        pass
+        data = {
+            "c1": self.class1,
+            "c2": self.class2,
+            "c3": self.class3,
+            "c1c": self.class1_counter,
+            "c2c": self.class2_counter,
+            "c3c": self.class3_counter,
+            "clf": self.clf,
+            "pname": self.proj_name
+        }
+        with open(f"{self.proj_name}/{self.proj_name}_data.pickle", "wb") as f:
+            pickle.dump(data, f)
+        tkinter.messagebox.showinfo("Ahmmed's Drawing Classifier", "Project Successfully Saved!", parent=self.root)
 
+        
+
+    def load_model(self):
+        file_path = tkinter.filedialog.askopenfilename()
+        with open(file_path, "rb") as r:
+            data = pickle.load(r)
+        self.class1 = data["c1"]
+        self.class2 = data["c2"]
+        self.class3 = data["c3"]
+        self.class1_counter = data["c1c"]
+        self.class2_counter = data["c2c"]
+        self.class3_counter = data["c3c"]
+        self.clf = data["clf"]
+        self.proj_name = data["pname"]
+        tkinter.messagebox.showinfo("Ahmmed's Drawing Classifier", "Model Loaded!", parent=self.root)
+        
+            
+    def on_closing(self):
+        answer = tkinter.messagebox.askyesno("Quit?", "Do you want to save your work?", parent=self.root)
+        if answer is True:
+            self.save_all()
+            self.root.destroy()
+                
 
 DrawingClassifier()
