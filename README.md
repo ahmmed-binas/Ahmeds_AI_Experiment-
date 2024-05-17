@@ -8,9 +8,8 @@ first make sure the getpip.py file is in your folder that you are working with t
 then go to your directory and download pip if you dont have ...
 ```
 python -m venv venv
-![done](https://github.com/ahmmed-binas/doodle-prediction-application/assets/110778968/889f917a-5d8b-44bb-b6a1-14eb06fe8530)
-
 ```
+![done](https://github.com/ahmmed-binas/doodle-prediction-application/assets/110778968/889f917a-5d8b-44bb-b6a1-14eb06fe8530)
 Then Activate The Virtual Environment
 ```
 .\venv\Scripts\activate
