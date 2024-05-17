@@ -2,8 +2,13 @@ import pickle
 import os.path
 import tkinter.messagebox
 from tkinter import *
+import tkinter as tk
 from tkinter import simpledialog
 import PIL
+from tkinter import Tk, Canvas, Frame, Button, Label
+from tkinter import colorchooser
+import PIL.Image
+import PIL.ImageDraw
 from PIL import Image
 import PIL.ImageDraw
 import cv2 as cv
@@ -58,7 +63,6 @@ class DrawingClassifier:
             self.class1_counter = 1
             self.class2_counter = 1
             self.class3_counter = 1
-
             self.clf = LinearSVC()
 
             os.mkdir(self.proj_name)
@@ -69,79 +73,94 @@ class DrawingClassifier:
             os.chdir("..")
     
     def init_gui(self):
-        WIDTH = 500
-        HEIGHT = 500
-        WHITE = (255, 255, 255)
+        WIDTH = 1000
+        HEIGHT = 1000
+        BLACK = "#000000"  
+        WHITE = "#FFFFFF"
 
         self.root = Tk()
         self.root.title(f"Ahmed's Drawing Classifier Experiment - {self.proj_name}")
 
-        self.canvas = Canvas(self.root, width=WIDTH-10, height=HEIGHT-10, bg="WHITE")
-        self.canvas.pack()
+        self.canvas = Canvas(self.root, width=500, height=300, bg=WHITE)  # Adjust width and height
+        self.canvas.grid(row=0, column=0)  # Specify the row and column parameters for the grid
+
 
         self.image1 = PIL.Image.new("RGB", (WIDTH, HEIGHT), WHITE)
         self.draw = PIL.ImageDraw.Draw(self.image1)
         self.canvas.bind("<B1-Motion>", self.paint)
+
         btn_frame = Frame(self.root)
-        btn_frame.pack(fill=X, side=BOTTOM)
-        btn_frame.columnconfigure(0, weight=1)
-        btn_frame.columnconfigure(1, weight=1)
-        btn_frame.columnconfigure(2, weight=1)
+        btn_frame.grid(row=0, column=1, sticky="nsew")
 
-        class1_btn = Button(btn_frame, text=self.class1, command=lambda: self.save(1))
-        class1_btn.grid(row=0, column=0, sticky=W+E)
 
-        class2_btn = Button(btn_frame, text=self.class2, command=lambda: self.save(2))
-        class2_btn.grid(row=0, column=1, sticky=W+E)
+        btn_style = {
+            "font": ("Arial", 10),
+            "bg": "darkblue",
+            "fg": "black",
+            "activebackground": "lightgreen",
+            "activeforeground": "black",
+            "width": 10
+        }
 
-        class3_btn = Button(btn_frame, text=self.class3, command=lambda: self.save(3))
-        class3_btn.grid(row=0, column=2, sticky=W+E)
+        class1_btn = Button(btn_frame, text=self.class1, command=lambda: self.save(1), **btn_style)
+        class1_btn.grid(row=0, column=0, sticky="ew")
 
-        bm_btn = Button(btn_frame, text="Brush-", command=self.brushminus)
-        bm_btn.grid(row=1, column=0, sticky=W+E)
+        class2_btn = Button(btn_frame, text=self.class2, command=lambda: self.save(2), **btn_style)
+        class2_btn.grid(row=1, column=0, sticky="ew")
 
-        clear_btn = Button(btn_frame, text="Erase All", command=self.clear)
-        clear_btn.grid(row=1, column=1, sticky=W+E)
+        class3_btn = Button(btn_frame, text=self.class3, command=lambda: self.save(3), **btn_style)
+        class3_btn.grid(row=2, column=0, sticky="ew")
 
-        bp_btn = Button(btn_frame, text="Brush+", command=self.brushplus)
-        bp_btn.grid(row=1, column=2, sticky=W+E)
+        bm_btn = Button(btn_frame, text="Brush-", command=self.brushminus, **btn_style)
+        bm_btn.grid(row=3, column=0, sticky="ew")
 
-        self.train_model()  # Train the model when GUI is initialized
+        clear_btn = Button(btn_frame, text="Erase All", command=self.clear, **btn_style)
+        clear_btn.grid(row=4, column=0, sticky="ew")
 
-        train_btn = Button(btn_frame, text="Train Model", command=self.train_model)
-        train_btn.grid(row=2, column=0, sticky=W+E)
+        bp_btn = Button(btn_frame, text="Brush+", command=self.brushplus, **btn_style)
+        bp_btn.grid(row=5, column=0, sticky="ew")
 
-        save_btn = Button(btn_frame, text="Save", command=self.save_model)
-        save_btn.grid(row=2, column=1, sticky=W+E)
+        train_btn = Button(btn_frame, text="Train Model", command=self.train_model, **btn_style)
+        train_btn.grid(row=6, column=0, sticky="ew")
 
-        load_btn = Button(btn_frame, text="Load Model", command=self.load_model)
-        load_btn.grid(row=2, column=2, sticky=W+E)
+        save_btn = Button(btn_frame, text="Save", command=self.save_model, **btn_style)
+        save_btn.grid(row=7, column=0, sticky="ew")
 
-        change_btn = Button(btn_frame, text="Change Model", command=self.rotate_model)
-        change_btn.grid(row=3, column=0, sticky=W+E)
+        load_btn = Button(btn_frame, text="Load Model", command=self.load_model, **btn_style)
+        load_btn.grid(row=8, column=0, sticky="ew")
 
-        predict_btn = Button(btn_frame, text="Predict!", command=self.predict)
-        predict_btn.grid(row=3, column=1, sticky=W+E)
+        change_btn = Button(btn_frame, text="Change Model", command=self.rotate_model, **btn_style)
+        change_btn.grid(row=9, column=0, sticky="ew")
 
-        save_all_btn = Button(btn_frame, text="Save All", command=self.save_all)
-        save_all_btn.grid(row=3, column=2, sticky=W+E)
+        predict_btn = Button(btn_frame, text="Predict!", command=self.predict, **btn_style)
+        predict_btn.grid(row=10, column=0, sticky="ew")
+
+        save_all_btn = Button(btn_frame, text="Save All", command=self.save_all, **btn_style)
+        save_all_btn.grid(row=11, column=0, sticky="ew")
 
         self.status_label = Label(btn_frame, text=f"Current Model: {type(self.clf).__name__}")
         self.status_label.config(font=("Arial", 10))
-        self.status_label.grid(row=4, column=1, sticky=W+E)
+        self.status_label.grid(row=12, column=0, sticky="ew")
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.attributes("-topmost", True)
         self.root.mainloop()
 
 
+
     def paint(self, event):
-        x1, y1 = (event.x-1), (event.y-1)
-        x2, y2 = (event.x+1), (event.y+1)
+        x1, y1 = (event.x - 1), (event.y - 1)
+        x2, y2 = (event.x + 1), (event.y + 1)
+        BLACK = "#000000"  # Color representation of black
 
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill="black", width=self.brush_width)
-        self.draw.rectangle([x1, y2, x2 + self.brush_width, y2 + self.brush_width], fill="black", width=self.brush_width)
-
+        # Draw a black rectangle on the canvas
+        self.canvas.create_rectangle(x1, y1, x2, y2, fill=BLACK, width=self.brush_width)
+        
+        # Draw a white rectangle in the image
+        self.draw.rectangle([x1, y1, x2, y2], fill=BLACK)
+        
+        
+        
     def save(self, class_num):
         self.image1.save("temp.png")
         img = PIL.Image.open("temp.png")
